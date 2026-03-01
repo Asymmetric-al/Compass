@@ -21,49 +21,82 @@ test.describe("authenticated seeded workflows", () => {
     await expect(page).toHaveURL(/\/today$/);
   });
 
-  test("today workflow can progress seeded commitment", async ({ page }) => {
-    const fixtures = await ensureAuthFixtureData();
-
+  test("today workflow can create and complete a work item", async ({
+    page,
+  }) => {
+    const uniqueWorkItemTitle = `E2E Fixture: Work item ${Date.now()}`;
     await page.goto("/today");
 
-    const commitmentCard = page
-      .locator("div.rounded-md.border.p-3")
-      .filter({ hasText: fixtures.seededCommitmentTitle });
-    await expect(commitmentCard).toBeVisible();
-    await expect(commitmentCard.getByText("planned")).toBeVisible();
+    const addInput = page.getByPlaceholder("Add work item...");
+    await addInput.fill(uniqueWorkItemTitle);
+    const addButton = addInput.locator("xpath=following-sibling::button[1]");
+
+    const createResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/v1/work-items") &&
+        response.request().method() === "POST"
+    );
+    await addButton.click();
+    const createApiResponse = await createResponse;
+    const createApiBody = (await createApiResponse.json()) as {
+      error: { code: string; message: string } | null;
+    };
+    expect(
+      createApiResponse.status(),
+      createApiBody.error?.message ?? "unexpected create work item error"
+    ).toBe(201);
+    await page.reload();
+
+    const workItemCard = page.getByText(uniqueWorkItemTitle).first();
+    await expect(workItemCard).toBeVisible();
+    await page.getByRole("tab", { name: "List" }).click();
+    await page
+      .getByRole("row", { name: new RegExp(uniqueWorkItemTitle) })
+      .click();
+    await expect(page.getByText("Work item detail")).toBeVisible();
 
     const updateResponse = page.waitForResponse(
       (response) =>
-        response.url().includes("/api/v1/commitments/") &&
+        response.url().includes("/api/v1/work-items/") &&
         response.request().method() === "PATCH" &&
         response.status() === 200
     );
 
-    await commitmentCard
-      .getByRole("button", { name: "Mark in progress" })
-      .click();
+    await page.getByRole("button", { name: "Toggle done" }).click();
     await updateResponse;
-    await expect(commitmentCard).toHaveCount(0);
+    await expect(page.getByText("Status: done")).toBeVisible();
   });
 
-  test("aims workflow can create personal aim", async ({ page }) => {
-    const createdAimTitle = `E2E Fixture: User aim ${Date.now()}`;
+  test("goals workflow can create personal goal", async ({ page }) => {
+    const createdGoalTitle = `E2E Fixture: User goal ${Date.now()}`;
 
-    await page.goto("/aims");
-    await page.getByLabel("Aim title").fill(createdAimTitle);
-    await page.getByRole("combobox").click();
-    await page.getByRole("option", { name: "User" }).click();
+    await page.goto("/goals/my");
+    await page.getByRole("button", { name: "Create goal" }).click();
+    await page.getByLabel("Title").fill(createdGoalTitle);
+
+    const today = new Date();
+    const quarterFromNow = new Date(Date.now() + 1000 * 60 * 60 * 24 * 90);
+    await page.getByLabel("Start date").fill(today.toISOString().slice(0, 10));
+    await page
+      .getByLabel("End date")
+      .fill(quarterFromNow.toISOString().slice(0, 10));
 
     const createResponse = page.waitForResponse(
       (response) =>
-        response.url().includes("/api/v1/aims") &&
-        response.request().method() === "POST" &&
-        response.status() === 201
+        response.url().includes("/api/v1/goals") &&
+        response.request().method() === "POST"
     );
 
-    await page.getByRole("button", { name: "Create aim" }).click();
-    await createResponse;
-    await expect(page.getByText(createdAimTitle)).toBeVisible();
+    await page.getByRole("button", { name: "Save goal" }).click();
+    const createGoalResponse = await createResponse;
+    const createGoalBody = (await createGoalResponse.json()) as {
+      error: { code: string; message: string } | null;
+    };
+    expect(
+      createGoalResponse.status(),
+      createGoalBody.error?.message ?? "unexpected create goal error"
+    ).toBe(201);
+    await expect(page.getByText(createdGoalTitle)).toBeVisible();
   });
 
   test("weekly check-in submits successfully", async ({ page }) => {
@@ -114,5 +147,8 @@ test.describe("authenticated seeded workflows", () => {
 
     await page.goto("/prayer");
     await expect(page.getByText(fixtures.seededPrayerText)).toBeVisible();
+
+    await page.goto("/goals/my");
+    await expect(page.getByText(fixtures.seededGoalTitle)).toBeVisible();
   });
 });

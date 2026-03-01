@@ -19,15 +19,13 @@ describe("Today page", () => {
 
   test("renders stewardship-focused title", () => {
     renderWithProviders();
-    expect(screen.getByText("Today's commitments")).toBeInTheDocument();
+    expect(screen.getByText("Today")).toBeInTheDocument();
   });
 
   test("renders ministry-first description", () => {
     renderWithProviders();
     expect(
-      screen.getByText(
-        "Work from top priority and weight so stewardship stays focused."
-      )
+      screen.getByText("Your personal execution lane powered by the Workboard.")
     ).toBeInTheDocument();
   });
 });

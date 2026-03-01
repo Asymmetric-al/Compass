@@ -12,6 +12,8 @@ type E2EFixtureData = {
   orgId: string;
   userId: string;
   regionTeamId: string;
+  seededGoalTitle: string;
+  seededWorkItemTitle: string;
   seededCommitmentTitle: string;
   seededStoryTitle: string;
   seededPrayerText: string;
@@ -291,11 +293,27 @@ async function ensureProfileAndAccess({
 
 async function clearPreviousFixtures({
   admin,
+  orgId,
   userId,
 }: {
   admin: SupabaseClient;
+  orgId: string;
   userId: string;
 }) {
+  await admin
+    .from("work_items")
+    .delete()
+    .eq("org_id", orgId)
+    .eq("owner_user_id", userId)
+    .ilike("title", `${FIXTURE_PREFIX}%`);
+
+  await admin
+    .from("goals")
+    .delete()
+    .eq("org_id", orgId)
+    .or(`scope_user_id.eq.${userId},created_by.eq.${userId}`)
+    .ilike("title", `${FIXTURE_PREFIX}%`);
+
   await admin
     .from("commitments")
     .delete()
@@ -319,6 +337,7 @@ async function clearPreviousFixtures({
   await admin
     .from("missionaries")
     .delete()
+    .eq("org_id", orgId)
     .ilike("code_name", `${FIXTURE_PREFIX}%`);
 }
 
@@ -335,6 +354,8 @@ async function insertSeedData({
 }): Promise<E2EFixtureData> {
   const seededAimTitle = `${FIXTURE_PREFIX} Strengthen field coaching loops`;
   const seededCommitmentTitle = `${FIXTURE_PREFIX} Prepare weekly field coaching agenda`;
+  const seededGoalTitle = `${FIXTURE_PREFIX} Advance team prayer rhythm`;
+  const seededWorkItemTitle = `${FIXTURE_PREFIX} Draft weekly prayer coaching plan`;
   const seededStoryTitle = `${FIXTURE_PREFIX} Local leader multiplied disciple groups`;
   const seededPrayerText = `${FIXTURE_PREFIX} Pray for discernment in region coaching visits`;
 
@@ -442,10 +463,142 @@ async function insertSeedData({
     );
   }
 
+  const { data: goal, error: goalError } = await admin
+    .from("goals")
+    .insert({
+      org_id: orgId,
+      scope_type: "user",
+      scope_team_id: regionTeamId,
+      scope_user_id: userId,
+      title: seededGoalTitle,
+      description_text: "Fixture goal used for workboard and goals v2 flows.",
+      status: "active",
+      timebox_type: "quarterly",
+      start_date: new Date().toISOString().slice(0, 10),
+      end_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 89)
+        .toISOString()
+        .slice(0, 10),
+      visibility: "private",
+      classification: "normal",
+      created_by: userId,
+      updated_by: userId,
+    })
+    .select("id")
+    .single();
+  if (goalError || !goal) {
+    throw new Error(`Unable to seed fixture goal: ${goalError?.message}`);
+  }
+
+  const { data: workItem, error: workItemError } = await admin
+    .from("work_items")
+    .insert({
+      org_id: orgId,
+      type: "task",
+      title: seededWorkItemTitle,
+      description_text: "Fixture work item for board movement tests.",
+      status_key: "backlog",
+      priority: "high",
+      due_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
+        .toISOString()
+        .slice(0, 10),
+      owner_user_id: userId,
+      team_id: regionTeamId,
+      created_by: userId,
+      updated_by: userId,
+      visibility: "team",
+      classification: "normal",
+    })
+    .select("id")
+    .single();
+  if (workItemError || !workItem) {
+    throw new Error(
+      `Unable to seed fixture work item: ${workItemError?.message}`
+    );
+  }
+
+  const { error: goalLinkError } = await admin
+    .from("work_item_goal_links")
+    .insert({
+      org_id: orgId,
+      work_item_id: workItem.id as string,
+      goal_id: goal.id as string,
+      is_primary: true,
+      created_by: userId,
+    });
+  if (goalLinkError) {
+    throw new Error(
+      `Unable to seed fixture work item goal link: ${goalLinkError.message}`
+    );
+  }
+
+  const { error: assigneeError } = await admin
+    .from("work_item_assignees")
+    .upsert(
+      {
+        org_id: orgId,
+        work_item_id: workItem.id as string,
+        user_id: userId,
+        created_by: userId,
+      },
+      { onConflict: "work_item_id,user_id" }
+    );
+  if (assigneeError) {
+    throw new Error(
+      `Unable to seed fixture work item assignee: ${assigneeError.message}`
+    );
+  }
+
+  const { data: board, error: boardError } = await admin
+    .from("boards")
+    .select("id")
+    .eq("org_id", orgId)
+    .eq("type", "user")
+    .eq("owner_user_id", userId)
+    .maybeSingle();
+  if (boardError) {
+    throw new Error(`Unable to load fixture board: ${boardError.message}`);
+  }
+  if (board?.id) {
+    const { data: backlogColumn, error: backlogColumnError } = await admin
+      .from("board_columns")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("board_id", board.id as string)
+      .eq("key", "backlog")
+      .single();
+
+    if (backlogColumnError || !backlogColumn) {
+      throw new Error(
+        `Unable to load fixture board backlog column: ${backlogColumnError?.message}`
+      );
+    }
+
+    const { error: boardStateError } = await admin
+      .from("work_item_board_state")
+      .upsert(
+        {
+          org_id: orgId,
+          board_id: board.id as string,
+          work_item_id: workItem.id as string,
+          column_id: backlogColumn.id as string,
+          position: 1000,
+          pinned: true,
+        },
+        { onConflict: "board_id,work_item_id" }
+      );
+    if (boardStateError) {
+      throw new Error(
+        `Unable to seed fixture board state: ${boardStateError.message}`
+      );
+    }
+  }
+
   return {
     orgId,
     userId,
     regionTeamId,
+    seededGoalTitle,
+    seededWorkItemTitle,
     seededCommitmentTitle,
     seededStoryTitle,
     seededPrayerText,
@@ -468,7 +621,7 @@ export async function ensureAuthFixtureData() {
       );
 
       await ensureProfileAndAccess({ admin, userId, orgId, regionTeamId });
-      await clearPreviousFixtures({ admin, userId });
+      await clearPreviousFixtures({ admin, orgId, userId });
 
       return insertSeedData({ admin, orgId, userId, regionTeamId });
     })();

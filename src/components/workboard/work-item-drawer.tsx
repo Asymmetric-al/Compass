@@ -40,6 +40,15 @@ type WorkItemTags = {
   labelIds: string[];
 };
 
+type GoalOption = { id: string; title: string };
+type TeamOption = { id: string; name: string };
+type MissionaryOption = {
+  id: string;
+  code_name: string | null;
+  public_name: string | null;
+};
+type LabelOption = { id: string; name: string };
+
 type WorkItemDrawerProps = {
   workItemId: string | null;
   open: boolean;
@@ -73,6 +82,48 @@ export function WorkItemDrawer({
         `/api/v1/work-items/${workItemId}/tags`
       );
       return payload.data;
+    },
+  });
+
+  const goalsQuery = useQuery({
+    queryKey: ["goal-options"],
+    enabled: open,
+    queryFn: async () => {
+      const payload = await fetchApi<GoalOption[]>("/api/v1/goals");
+      return payload.data ?? [];
+    },
+  });
+
+  const teamsQuery = useQuery({
+    queryKey: ["team-options"],
+    enabled: open,
+    queryFn: async () => {
+      const payload = await fetchApi<TeamOption[]>("/api/v1/teams");
+      return payload.data ?? [];
+    },
+  });
+
+  const missionariesQuery = useQuery({
+    queryKey: ["missionary-options"],
+    enabled: open,
+    queryFn: async () => {
+      const payload = await fetchApi<MissionaryOption[]>(
+        "/api/v1/missionaries"
+      );
+      return payload.data ?? [];
+    },
+  });
+
+  const labelsQuery = useQuery({
+    queryKey: ["label-options"],
+    enabled: open,
+    queryFn: async () => {
+      try {
+        const payload = await fetchApi<LabelOption[]>("/api/v1/admin/labels");
+        return payload.data ?? [];
+      } catch {
+        return [];
+      }
     },
   });
 
@@ -158,22 +209,36 @@ export function WorkItemDrawer({
     onSuccess: invalidate,
   });
 
-  const allTagShape = useMemo(
+  const goalsById = useMemo(
+    () => new Map((goalsQuery.data ?? []).map((goal) => [goal.id, goal.title])),
+    [goalsQuery.data]
+  );
+
+  const enhancedGoalLinks = useMemo(
+    () =>
+      (detailQuery.data?.goals ?? []).map((goalLink) => ({
+        ...goalLink,
+        title: goalsById.get(goalLink.goal_id) ?? goalLink.goal_id,
+      })),
+    [detailQuery.data?.goals, goalsById]
+  );
+
+  const tagPayload = tagsQuery.data ?? {
+    teamIds: [],
+    missionaryIds: [],
+    labelIds: [],
+  };
+
+  const availableTagOptions = useMemo(
     () => ({
-      teams: (tagsQuery.data?.teamIds ?? []).map((id) => ({
-        team_id: id,
-        name: id,
+      teams: teamsQuery.data ?? [],
+      missionaries: (missionariesQuery.data ?? []).map((missionary) => ({
+        id: missionary.id,
+        name: missionary.public_name ?? missionary.code_name ?? "Missionary",
       })),
-      missionaries: (tagsQuery.data?.missionaryIds ?? []).map((id) => ({
-        missionary_id: id,
-        name: id,
-      })),
-      labels: (tagsQuery.data?.labelIds ?? []).map((id) => ({
-        label_id: id,
-        name: id,
-      })),
+      labels: labelsQuery.data ?? [],
     }),
-    [tagsQuery.data]
+    [teamsQuery.data, missionariesQuery.data, labelsQuery.data]
   );
 
   return (
@@ -239,7 +304,8 @@ export function WorkItemDrawer({
             />
 
             <GoalLinkPanel
-              links={detailQuery.data.goals}
+              links={enhancedGoalLinks}
+              availableGoals={goalsQuery.data ?? []}
               onAdd={(goalId, isPrimary) =>
                 addGoalLinkMutation.mutateAsync({ goalId, isPrimary })
               }
@@ -247,7 +313,8 @@ export function WorkItemDrawer({
             />
 
             <TagsPanel
-              tags={allTagShape}
+              tags={tagPayload}
+              available={availableTagOptions}
               onSave={(payload) => saveTagsMutation.mutateAsync(payload)}
             />
           </div>

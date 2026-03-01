@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type TagsPanelProps = {
   tags: {
-    teams: Array<{ team_id: string; name: string }>;
-    missionaries: Array<{ missionary_id: string; name: string }>;
-    labels: Array<{ label_id: string; name: string }>;
+    teamIds: string[];
+    missionaryIds: string[];
+    labelIds: string[];
+  };
+  available: {
+    teams: Array<{ id: string; name: string }>;
+    missionaries: Array<{ id: string; name: string }>;
+    labels: Array<{ id: string; name: string }>;
   };
   onSave: (payload: {
     teamIds: string[];
@@ -19,76 +21,118 @@ type TagsPanelProps = {
   }) => Promise<unknown> | void;
 };
 
-function parseCsv(value: string) {
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
+export function TagsPanel({ tags, available, onSave }: TagsPanelProps) {
+  function toggleTag({
+    kind,
+    id,
+  }: {
+    kind: "team" | "missionary" | "label";
+    id: string;
+  }) {
+    const nextTeamIds = new Set(tags.teamIds);
+    const nextMissionaryIds = new Set(tags.missionaryIds);
+    const nextLabelIds = new Set(tags.labelIds);
 
-export function TagsPanel({ tags, onSave }: TagsPanelProps) {
-  const [teamIdsRaw, setTeamIdsRaw] = useState("");
-  const [missionaryIdsRaw, setMissionaryIdsRaw] = useState("");
-  const [labelIdsRaw, setLabelIdsRaw] = useState("");
+    if (kind === "team") {
+      if (nextTeamIds.has(id)) nextTeamIds.delete(id);
+      else nextTeamIds.add(id);
+    }
+    if (kind === "missionary") {
+      if (nextMissionaryIds.has(id)) nextMissionaryIds.delete(id);
+      else nextMissionaryIds.add(id);
+    }
+    if (kind === "label") {
+      if (nextLabelIds.has(id)) nextLabelIds.delete(id);
+      else nextLabelIds.add(id);
+    }
 
-  const current = useMemo(
-    () => ({
-      teams: tags.teams.map((tag) => tag.team_id),
-      missionaries: tags.missionaries.map((tag) => tag.missionary_id),
-      labels: tags.labels.map((tag) => tag.label_id),
-    }),
-    [tags]
-  );
+    onSave({
+      teamIds: Array.from(nextTeamIds),
+      missionaryIds: Array.from(nextMissionaryIds),
+      labelIds: Array.from(nextLabelIds),
+    });
+  }
 
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-semibold">Tags</h3>
       <div className="space-y-2">
         <div className="space-y-1">
-          <p className="text-muted-foreground text-xs">Current labels</p>
+          <p className="text-muted-foreground text-xs">Label tags</p>
           <div className="flex flex-wrap gap-1">
-            {tags.labels.length ? (
-              tags.labels.map((label) => (
-                <Badge key={label.label_id} variant="outline">
-                  {label.name}
-                </Badge>
+            {available.labels.length ? (
+              available.labels.map((label) => (
+                <label
+                  key={label.id}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-xs"
+                >
+                  <Checkbox
+                    checked={tags.labelIds.includes(label.id)}
+                    onCheckedChange={() =>
+                      toggleTag({ kind: "label", id: label.id })
+                    }
+                  />
+                  <Badge variant="outline">{label.name}</Badge>
+                </label>
               ))
             ) : (
-              <span className="text-muted-foreground text-xs">No labels</span>
+              <span className="text-muted-foreground text-xs">
+                No labels available.
+              </span>
             )}
           </div>
         </div>
-
-        <Input
-          placeholder="Team IDs (comma separated)"
-          value={teamIdsRaw}
-          onChange={(event) => setTeamIdsRaw(event.target.value)}
-        />
-        <Input
-          placeholder="Missionary IDs (comma separated)"
-          value={missionaryIdsRaw}
-          onChange={(event) => setMissionaryIdsRaw(event.target.value)}
-        />
-        <Input
-          placeholder="Label IDs (comma separated)"
-          value={labelIdsRaw}
-          onChange={(event) => setLabelIdsRaw(event.target.value)}
-        />
       </div>
-      <Button
-        variant="outline"
-        onClick={() =>
-          onSave({
-            teamIds: teamIdsRaw ? parseCsv(teamIdsRaw) : current.teams,
-            missionaryIds: missionaryIdsRaw
-              ? parseCsv(missionaryIdsRaw)
-              : current.missionaries,
-            labelIds: labelIdsRaw ? parseCsv(labelIdsRaw) : current.labels,
-          })
-        }
-      >
-        Save tags
-      </Button>
+      <div className="space-y-1">
+        <p className="text-muted-foreground text-xs">Team tags</p>
+        <div className="flex flex-wrap gap-1">
+          {available.teams.length ? (
+            available.teams.map((team) => (
+              <label
+                key={team.id}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-xs"
+              >
+                <Checkbox
+                  checked={tags.teamIds.includes(team.id)}
+                  onCheckedChange={() =>
+                    toggleTag({ kind: "team", id: team.id })
+                  }
+                />
+                <span>{team.name}</span>
+              </label>
+            ))
+          ) : (
+            <span className="text-muted-foreground text-xs">
+              No teams available.
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="text-muted-foreground text-xs">Missionary tags</p>
+        <div className="flex flex-wrap gap-1">
+          {available.missionaries.length ? (
+            available.missionaries.map((missionary) => (
+              <label
+                key={missionary.id}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-xs"
+              >
+                <Checkbox
+                  checked={tags.missionaryIds.includes(missionary.id)}
+                  onCheckedChange={() =>
+                    toggleTag({ kind: "missionary", id: missionary.id })
+                  }
+                />
+                <span>{missionary.name}</span>
+              </label>
+            ))
+          ) : (
+            <span className="text-muted-foreground text-xs">
+              No missionaries available.
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

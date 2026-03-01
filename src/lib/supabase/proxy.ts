@@ -3,10 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const AUTH_FREE_PATHS = ["/login", "/auth"];
 const PROTECTED_PREFIXES = [
+  "/workboard",
   "/today",
   "/my-work",
   "/my-team",
   "/network",
+  "/goals",
   "/aims",
   "/map",
   "/check-ins",

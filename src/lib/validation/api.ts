@@ -180,28 +180,45 @@ export const upsertMissionaryUpdateSchema = z.object({
   classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
 });
 
-export const createGoalSchema = z
-  .object({
-    scopeType: z.enum(["org", "team", "user"]),
-    scopeTeamId: uuidSchema.nullable().optional(),
-    scopeUserId: uuidSchema.nullable().optional(),
-    title: z.string().min(2).max(240),
-    descriptionJson: z.record(z.string(), z.unknown()).nullable().optional(),
-    descriptionText: z.string().nullable().optional(),
-    status: z.enum(["draft", "active", "done", "dropped"]).optional(),
-    timeboxType: z.enum(["annual", "quarterly", "monthly", "weekly", "custom"]),
-    startDate: z.string().date(),
-    endDate: z.string().date(),
-    parentGoalId: uuidSchema.nullable().optional(),
-    visibility: z.enum(["org", "team", "private"]).optional(),
-    classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
-  })
-  .refine((value) => value.startDate <= value.endDate, {
+const goalSchemaBase = z.object({
+  scopeType: z.enum(["org", "team", "user"]),
+  scopeTeamId: uuidSchema.nullable().optional(),
+  scopeUserId: uuidSchema.nullable().optional(),
+  title: z.string().min(2).max(240),
+  descriptionJson: z.record(z.string(), z.unknown()).nullable().optional(),
+  descriptionText: z.string().nullable().optional(),
+  status: z.enum(["draft", "active", "done", "dropped"]).optional(),
+  timeboxType: z.enum(["annual", "quarterly", "monthly", "weekly", "custom"]),
+  startDate: z.string().date(),
+  endDate: z.string().date(),
+  parentGoalId: uuidSchema.nullable().optional(),
+  visibility: z.enum(["org", "team", "private"]).optional(),
+  classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
+});
+
+export const createGoalSchema = goalSchemaBase.refine(
+  (value) => value.startDate <= value.endDate,
+  {
     message: "startDate must be before or equal to endDate",
     path: ["endDate"],
-  });
+  }
+);
 
-export const updateGoalSchema = createGoalSchema.partial();
+export const updateGoalSchema = goalSchemaBase
+  .partial()
+  .superRefine((value, ctx) => {
+    if (
+      value.startDate !== undefined &&
+      value.endDate !== undefined &&
+      value.startDate > value.endDate
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "startDate must be before or equal to endDate",
+        path: ["endDate"],
+      });
+    }
+  });
 
 export const createGoalLinkSchema = z.object({
   upstreamGoalId: uuidSchema,
@@ -256,15 +273,16 @@ export const updateBoardSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
-export const createBoardViewSchema = z
-  .object({
-    name: z.string().min(2).max(120),
-    kind: z.enum(["all", "goal", "unlinked", "custom"]),
-    goalId: uuidSchema.nullable().optional(),
-    filterJson: z.record(z.string(), z.unknown()).nullable().optional(),
-    sortOrder: z.number().int().optional(),
-  })
-  .superRefine((value, ctx) => {
+const boardViewSchemaBase = z.object({
+  name: z.string().min(2).max(120),
+  kind: z.enum(["all", "goal", "unlinked", "custom"]),
+  goalId: uuidSchema.nullable().optional(),
+  filterJson: z.record(z.string(), z.unknown()).nullable().optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+export const createBoardViewSchema = boardViewSchemaBase.superRefine(
+  (value, ctx) => {
     if (value.kind === "goal" && !value.goalId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -279,9 +297,27 @@ export const createBoardViewSchema = z
         path: ["filterJson"],
       });
     }
-  });
+  }
+);
 
-export const updateBoardViewSchema = createBoardViewSchema.partial();
+export const updateBoardViewSchema = boardViewSchemaBase
+  .partial()
+  .superRefine((value, ctx) => {
+    if (value.kind === "goal" && value.goalId === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "goalId is required when kind is goal",
+        path: ["goalId"],
+      });
+    }
+    if (value.kind === "custom" && value.filterJson === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "filterJson is required when kind is custom",
+        path: ["filterJson"],
+      });
+    }
+  });
 
 export const updateBoardColumnSchema = z.object({
   name: z.string().min(2).max(120).optional(),

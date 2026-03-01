@@ -42,6 +42,14 @@ export function WorkboardPage({
   const [newItemTitle, setNewItemTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const meQuery = useQuery({
+    queryKey: ["me-context"],
+    queryFn: async () => {
+      const payload = await fetchApi<{ userId: string }>("/api/v1/me");
+      return payload.data;
+    },
+  });
+
   const boardsQuery = useQuery({
     queryKey: ["workboard-boards"],
     queryFn: async () => {
@@ -60,10 +68,21 @@ export function WorkboardPage({
     }
 
     const preferred = preferredBoardType
-      ? boardsQuery.data.find((board) => board.type === preferredBoardType)
+      ? boardsQuery.data.find((board) => {
+          if (board.type !== preferredBoardType) return false;
+          if (preferredBoardType === "user" && meQuery.data?.userId) {
+            return board.owner_user_id === meQuery.data.userId;
+          }
+          return true;
+        })
       : undefined;
     return preferred?.id ?? boardsQuery.data[0].id;
-  }, [boardsQuery.data, preferredBoardType, requestedBoardId]);
+  }, [
+    boardsQuery.data,
+    meQuery.data?.userId,
+    preferredBoardType,
+    requestedBoardId,
+  ]);
 
   const viewsQuery = useQuery({
     queryKey: ["workboard-views", selectedBoardId],
@@ -174,6 +193,7 @@ export function WorkboardPage({
           <div className="grid gap-3 md:grid-cols-[minmax(0,340px)_1fr_auto] md:items-center">
             <BoardSwitcher
               boards={boardsQuery.data ?? []}
+              currentUserId={meQuery.data?.userId}
               value={selectedBoardId}
               onValueChange={(nextBoardId) => {
                 setRequestedBoardId(nextBoardId);
@@ -186,7 +206,11 @@ export function WorkboardPage({
               placeholder="Search board items..."
             />
             <Badge variant="outline">
-              {selectedBoard?.type === "team" ? "Team board" : "Personal board"}
+              {selectedBoard?.type === "team"
+                ? "Team board"
+                : selectedBoard?.owner_user_id === meQuery.data?.userId
+                  ? "Personal board"
+                  : "User board"}
             </Badge>
           </div>
           <ViewSwitcher

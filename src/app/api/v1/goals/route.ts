@@ -2,6 +2,7 @@ import { API_ERROR } from "@/lib/api/errors";
 import { isOrgAdmin, isTeamDirector } from "@/lib/api/authorization";
 import { getApiContext } from "@/lib/api/request-context";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { createServiceClient } from "@/lib/supabase/service";
 import { createGoalSchema } from "@/lib/validation/api";
 
 export const dynamic = "force-dynamic";
@@ -131,7 +132,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await context.supabase
+  const service = createServiceClient();
+  const { data, error } = await service
     .from("goals")
     .insert({
       org_id: context.orgId,

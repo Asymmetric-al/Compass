@@ -4,9 +4,10 @@ A ministry-first goals platform built for mission organizations.
 
 Compass helps teams:
 
-- Set organization, department, region, and personal **Aims**
-- Track **Lead** and **Lag** measures with clear definitions
-- Run a daily **Today commitments** workflow with priority + weight
+- Set organization, team, and personal **Goals**
+- Track **Lead** and **Outcome** measures with update history
+- Execute daily work in the **Workboard** (kanban + list)
+- Link work items to goals, checklist progress, and tags
 - Submit weekly **Check-ins** with blockers, asks, and prayer
 - Capture **Stories** and **Prayer items**
 - Manage staff-only **Missionary records** and monthly updates
@@ -38,6 +39,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_COMPASS_V2_ENABLED=true
 ```
 
 ## Supabase Schema + RLS
@@ -50,10 +52,25 @@ supabase/migrations/
 
 They include:
 
-- Core domain schema (aims, measures, commitments, check-ins, stories, prayer, missionaries)
+- Core schema for legacy and v2 domain models
+  - v2 goals/workboard tables (`goals`, `boards`, `work_items`, links/tags/checklist)
 - Trigger and helper functions
 - Row-level security policies
-- Bootstrap seed for default org + teams
+- Bootstrap seed for default org + teams + board scaffolding
+
+## v2 rollout commands
+
+```bash
+# bootstrap schema + policies
+bun run db:bootstrap
+
+# backfill old aims/commitments into goals/work_items
+bun run db:migrate:v2
+bun run db:backfill:v2
+
+# optional deterministic mock data for workboard/goals UX testing
+bun run db:seed:v2
+```
 
 ## Commands
 
@@ -71,6 +88,10 @@ They include:
 | `bun run test:e2e` | Run E2E tests (Playwright) |
 | `bun run format` | Format code with Prettier |
 | `bun run format:check` | Check formatting |
+| `bun run db:bootstrap` | Apply schema/rls bootstrap migrations |
+| `bun run db:migrate:v2` | Migrate aims/commitments into v2 goals/work-items |
+| `bun run db:backfill:v2` | Backfill board state and board wiring |
+| `bun run db:seed:v2` | Seed deterministic v2 mock data |
 
 Use `bunx turbo <task>` to run tasks with Turborepo caching.
 
@@ -92,17 +113,21 @@ Use `bunx turbo <task>` to run tasks with Turborepo caching.
 
 ## Application Sections
 
-- `/today` — daily prioritized commitments
-- `/my-work` — personal execution list
+- `/workboard` — canonical work execution board
+- `/today` — personal workboard-focused landing experience
+- `/my-work` — personal board shortcut
+- `/goals` — goals hub (my/org/team)
 - `/my-team` — team pulse and check-in visibility
 - `/network` — cross-team view
-- `/aims` — aim definition and tracking
+- `/aims` — legacy aims view retained for compatibility
 - `/map` — goal connections map
 - `/check-ins` — weekly check-in submission
 - `/stories` — quick and MSC-style stories
 - `/prayer` — prayer request tracking
 - `/missionaries` — missionary records and updates
 - `/admin` — organizational setup and governance overview
+
+`NEXT_PUBLIC_COMPASS_V2_ENABLED=true` enables goals/workboard-first navigation.
 
 ## Project Structure
 

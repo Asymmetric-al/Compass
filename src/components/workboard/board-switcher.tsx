@@ -11,12 +11,14 @@ import type { WorkboardBoard } from "@/components/workboard/types";
 
 type BoardSwitcherProps = {
   boards: WorkboardBoard[];
+  currentUserId?: string;
   value: string;
   onValueChange: (nextBoardId: string) => void;
 };
 
 export function BoardSwitcher({
   boards,
+  currentUserId,
   value,
   onValueChange,
 }: BoardSwitcherProps) {
@@ -28,7 +30,12 @@ export function BoardSwitcher({
       <SelectContent>
         {boards.map((board) => (
           <SelectItem key={board.id} value={board.id}>
-            {board.name} {board.type === "user" ? "(My board)" : "(Team board)"}
+            {board.name}{" "}
+            {board.type === "user"
+              ? board.owner_user_id === currentUserId
+                ? "(My board)"
+                : "(User board)"
+              : "(Team board)"}
           </SelectItem>
         ))}
       </SelectContent>
