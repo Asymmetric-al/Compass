@@ -74,13 +74,63 @@ compass/
 ## Architecture Decisions
 
 - **App Router only.** No Pages Router. All routes use React Server Components by default.
-- **Turbopack is the default bundler** for `next dev` and `next build`. No flags needed.
-- **Server Components first.** Only add `"use client"` when the component needs browser APIs, event handlers, or React hooks (useState, useEffect, etc.).
+- **Turbopack is the default bundler** for `next dev` and `next build`.
+- **Server Components first.** Only add `"use client"` when the component needs browser APIs, event handlers, or hooks.
 - **Server Actions** for mutations. Prefer `"use server"` functions over API routes for data mutations.
 - **Streaming and Suspense.** Use `loading.tsx` and `<Suspense>` boundaries for progressive rendering.
 - **Metadata API.** Use `export const metadata` or `generateMetadata()` for SEO. No `<Head>` component.
 - **Image optimization.** Always use `next/image` instead of `<img>`.
-- **Font optimization.** Use `next/font` for web fonts (already configured with Geist).
+- **Font optimization.** Inter (UI) via `next/font`, Geist Mono via `geist` package.
+
+## UI/UX Standard: Maia Design System
+
+> **Full spec:** `docs/DESIGN_SYSTEM.md` | **Agent skill:** `.agents/skills/maia-design-system/SKILL.md`
+>
+> Read these before creating or modifying ANY visual component.
+
+### Non-Negotiables
+
+1. **shadcn/ui exclusively with the Maia theme.** No other component libraries. Install: `bunx shadcn@latest add <component>`.
+2. **Tokens only.** Use `bg-background`, `text-foreground`, `border-border`, `ring-ring`. **NEVER** write `zinc-*` in component files. Theme is in `globals.css`.
+3. **Inter for UI. Geist Mono for code/numbers.** `font-sans` = Inter. `font-mono` = Geist Mono (IDs, tokens, code, metrics).
+4. **Both modes designed.** Dark mode switches CSS variables. Components never add `dark:` overrides.
+5. **One spacing system.** `gap-6`-`gap-8` sections | `p-4`-`p-6` cards | `space-y-4` forms | `gap-2`-`gap-3` inline. No one-off values.
+
+### Type Scale
+
+Element|Classes
+---|---
+Page title|`text-3xl font-semibold tracking-tight`
+Page subtitle|`text-sm text-muted-foreground`
+Section title|`text-base font-semibold`
+Card title|`text-sm font-semibold`
+Body|`text-sm`
+Label|`text-xs font-medium`
+Muted|`text-xs text-muted-foreground`
+Mono value|`font-mono text-xs tabular-nums`
+Metric|`text-2xl font-semibold tabular-nums`
+
+### Page Structure
+
+Every page: Header row (title left, actions right) → Controls row (search, filters) → Content area (cards, tables). Same rhythm everywhere.
+
+### Component Rules
+
+- **Buttons:** `default`, `secondary`, `outline`, `ghost`, `destructive`. One primary action per page.
+- **Forms:** Labels always visible. Errors inline near field. Group in cards.
+- **Tables:** Always inside a Card. Muted header. Subtle hover. `tabular-nums` on number columns.
+- **Dialogs/Sheets/Popovers:** Escape closes. Click-outside closes. Focus returns to trigger.
+- **Toasts:** Short and actionable. Cap count. Never stack forever.
+- **Empty states:** Explain what this area is, show primary action, calm tone.
+- **Loading:** Skeletons for tables/cards. Spinners for inline actions.
+
+### Motion
+
+`--motion-fast: 120ms` | `--motion-base: 180ms` | `--motion-slow: 240ms` | `--ease-standard: cubic-bezier(0.2, 0, 0, 1)`. No bounce. No overshoot. Respect `prefers-reduced-motion`.
+
+### Accessibility
+
+Visible focus on all interactive elements. Label every input. Keyboard nav everywhere. WCAG AA contrast in both modes.
 
 ## Code Style
 
