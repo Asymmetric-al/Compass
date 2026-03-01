@@ -1,5 +1,11 @@
-import { TodayBoard } from "@/components/commitments/today-board";
+import { WorkboardPage } from "@/components/workboard/workboard-page";
 
 export default function TodayPage() {
-  return <TodayBoard />;
+  return (
+    <WorkboardPage
+      preferredBoardType="user"
+      heading="Today"
+      description="Your personal execution lane powered by the Workboard."
+    />
+  );
 }

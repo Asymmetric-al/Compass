@@ -22,11 +22,12 @@ export type AppNavItem = {
 };
 
 export const PRIMARY_NAV_ITEMS: AppNavItem[] = [
-  { title: "Today", href: "/today", icon: Compass },
+  { title: "Workboard", href: "/workboard", icon: Compass },
+  { title: "Today", href: "/today", icon: ListChecks },
   { title: "My Work", href: "/my-work", icon: ListChecks },
   { title: "My Team", href: "/my-team", icon: Users },
   { title: "Network", href: "/network", icon: Network },
-  { title: "Aims", href: "/aims", icon: Goal },
+  { title: "Goals", href: "/goals", icon: Goal },
   { title: "Connections", href: "/map", icon: Flag },
   { title: "Check-ins", href: "/check-ins", icon: NotebookPen },
   { title: "Stories", href: "/stories", icon: BookOpenText },
