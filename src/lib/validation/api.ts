@@ -179,3 +179,183 @@ export const upsertMissionaryUpdateSchema = z.object({
   lagMetrics: z.record(z.string(), z.unknown()).optional(),
   classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
 });
+
+export const createGoalSchema = z
+  .object({
+    scopeType: z.enum(["org", "team", "user"]),
+    scopeTeamId: uuidSchema.nullable().optional(),
+    scopeUserId: uuidSchema.nullable().optional(),
+    title: z.string().min(2).max(240),
+    descriptionJson: z.record(z.string(), z.unknown()).nullable().optional(),
+    descriptionText: z.string().nullable().optional(),
+    status: z.enum(["draft", "active", "done", "dropped"]).optional(),
+    timeboxType: z.enum(["annual", "quarterly", "monthly", "weekly", "custom"]),
+    startDate: z.string().date(),
+    endDate: z.string().date(),
+    parentGoalId: uuidSchema.nullable().optional(),
+    visibility: z.enum(["org", "team", "private"]).optional(),
+    classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
+  })
+  .refine((value) => value.startDate <= value.endDate, {
+    message: "startDate must be before or equal to endDate",
+    path: ["endDate"],
+  });
+
+export const updateGoalSchema = createGoalSchema.partial();
+
+export const createGoalLinkSchema = z.object({
+  upstreamGoalId: uuidSchema,
+  linkType: z.enum(["supports", "related"]).optional(),
+});
+
+export const createGoalMeasureSchema = z.object({
+  kind: z.enum(["lead", "outcome"]),
+  name: z.string().min(2).max(180),
+  unit: z.string().nullable().optional(),
+  format: z.enum(["number", "percent", "boolean", "text"]).optional(),
+  startValue: z.number().nullable().optional(),
+  targetValue: z.number().nullable().optional(),
+  currentValue: z.number().nullable().optional(),
+  updateCadence: z.enum(["weekly", "monthly", "ad_hoc"]).optional(),
+});
+
+export const createGoalMeasureUpdateSchema = z.object({
+  value: z.number().nullable().optional(),
+  noteJson: z.record(z.string(), z.unknown()).nullable().optional(),
+  noteText: z.string().nullable().optional(),
+  occurredAt: z.string().date(),
+});
+
+export const createBoardSchema = z
+  .object({
+    type: z.enum(["user", "team"]),
+    ownerUserId: uuidSchema.nullable().optional(),
+    teamId: uuidSchema.nullable().optional(),
+    name: z.string().min(2).max(180),
+    isDefault: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.type === "user" && !value.ownerUserId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "ownerUserId is required for user boards",
+        path: ["ownerUserId"],
+      });
+    }
+    if (value.type === "team" && !value.teamId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "teamId is required for team boards",
+        path: ["teamId"],
+      });
+    }
+  });
+
+export const updateBoardSchema = z.object({
+  name: z.string().min(2).max(180).optional(),
+  isDefault: z.boolean().optional(),
+});
+
+export const createBoardViewSchema = z
+  .object({
+    name: z.string().min(2).max(120),
+    kind: z.enum(["all", "goal", "unlinked", "custom"]),
+    goalId: uuidSchema.nullable().optional(),
+    filterJson: z.record(z.string(), z.unknown()).nullable().optional(),
+    sortOrder: z.number().int().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.kind === "goal" && !value.goalId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "goalId is required when kind is goal",
+        path: ["goalId"],
+      });
+    }
+    if (value.kind === "custom" && !value.filterJson) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "filterJson is required when kind is custom",
+        path: ["filterJson"],
+      });
+    }
+  });
+
+export const updateBoardViewSchema = createBoardViewSchema.partial();
+
+export const updateBoardColumnSchema = z.object({
+  name: z.string().min(2).max(120).optional(),
+  sortOrder: z.number().int().optional(),
+  wipLimit: z.number().int().min(1).nullable().optional(),
+});
+
+export const reorderBoardColumnsSchema = z.object({
+  orderedColumnIds: z.array(uuidSchema).min(1),
+});
+
+export const createWorkItemSchema = z.object({
+  type: z.enum(["task", "project", "subtask"]).optional(),
+  title: z.string().min(2).max(240),
+  descriptionJson: z.record(z.string(), z.unknown()).nullable().optional(),
+  descriptionText: z.string().nullable().optional(),
+  statusKey: z.enum(["backlog", "next", "doing", "waiting", "done"]).optional(),
+  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  dueDate: z.string().date().nullable().optional(),
+  startDate: z.string().date().nullable().optional(),
+  ownerUserId: uuidSchema.optional(),
+  teamId: uuidSchema.nullable().optional(),
+  visibility: z.enum(["org", "team", "private"]).optional(),
+  classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
+  parentWorkItemId: uuidSchema.nullable().optional(),
+  primaryGoalId: uuidSchema.nullable().optional(),
+  linkedGoalIds: z.array(uuidSchema).optional(),
+});
+
+export const updateWorkItemSchema = createWorkItemSchema.partial();
+
+export const addWorkItemAssigneeSchema = z.object({
+  userId: uuidSchema,
+});
+
+export const addWorkItemWatcherSchema = z.object({
+  userId: uuidSchema,
+});
+
+export const linkWorkItemGoalSchema = z.object({
+  goalId: uuidSchema,
+  isPrimary: z.boolean().optional(),
+});
+
+export const setWorkItemTagsSchema = z.object({
+  teamIds: z.array(uuidSchema).default([]),
+  missionaryIds: z.array(uuidSchema).default([]),
+  labelIds: z.array(uuidSchema).default([]),
+});
+
+export const moveWorkItemSchema = z.object({
+  toColumnId: uuidSchema,
+  prevWorkItemId: uuidSchema.nullable(),
+  nextWorkItemId: uuidSchema.nullable(),
+});
+
+export const pinWorkItemSchema = z.object({
+  boardId: uuidSchema,
+});
+
+export const createChecklistItemSchema = z.object({
+  text: z.string().min(1).max(240),
+  sortOrder: z.number().int().optional(),
+});
+
+export const updateChecklistItemSchema = z.object({
+  text: z.string().min(1).max(240).optional(),
+  isDone: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+export const createLabelSchema = z.object({
+  name: z.string().min(2).max(80),
+  colorKey: z.string().nullable().optional(),
+});
+
+export const updateLabelSchema = createLabelSchema.partial();
