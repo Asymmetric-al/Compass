@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { StoriesBoard } from "@/components/stories/stories-board";
 
 export default function StoriesPage() {
-  return (
-    <PagePlaceholder
-      title="Stories"
-      description="Record quick stories and most significant change narratives from the field."
-    />
-  );
+  return <StoriesBoard />;
 }

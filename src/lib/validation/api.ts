@@ -138,6 +138,15 @@ export const createStorySchema = z.object({
   classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
 });
 
+export const createPrayerItemSchema = z.object({
+  teamId: uuidSchema.nullable().optional(),
+  aimId: uuidSchema.nullable().optional(),
+  ownerUserId: uuidSchema.nullable().optional(),
+  text: z.string().min(2).max(500),
+  status: z.enum(["open", "answered", "closed"]).optional(),
+  classification: z.enum(["normal", "sensitive", "restricted"]).optional(),
+});
+
 export const createMissionarySchema = z.object({
   regionTeamId: uuidSchema,
   codeName: z.string().nullable().optional(),

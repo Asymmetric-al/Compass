@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { TodayBoard } from "@/components/commitments/today-board";
 
 export default function TodayPage() {
-  return (
-    <PagePlaceholder
-      title="Today’s commitments"
-      description="Focus on the highest-priority, highest-weight commitments connected to stewardship measures."
-    />
-  );
+  return <TodayBoard />;
 }

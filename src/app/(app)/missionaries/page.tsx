@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { MissionariesBoard } from "@/components/missionaries/missionaries-board";
 
 export default function MissionariesPage() {
-  return (
-    <PagePlaceholder
-      title="Missionaries"
-      description="Internal staff workflow for missionary records, monthly updates, and support needs."
-    />
-  );
+  return <MissionariesBoard />;
 }

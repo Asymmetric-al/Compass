@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { PrayerBoard } from "@/components/prayer/prayer-board";
 
 export default function PrayerPage() {
-  return (
-    <PagePlaceholder
-      title="Prayer"
-      description="Track shared prayer requests connected to aims, teams, and regions."
-    />
-  );
+  return <PrayerBoard />;
 }

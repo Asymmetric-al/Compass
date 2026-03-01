@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { AdminOverview } from "@/components/admin/admin-overview";
 
 export default function AdminPage() {
-  return (
-    <PagePlaceholder
-      title="Admin"
-      description="Manage org structure, roles, cycles, templates, and governance settings."
-    />
-  );
+  return <AdminOverview />;
 }

@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { TeamOverview } from "@/components/dashboard/team-overview";
 
 export default function NetworkPage() {
-  return (
-    <PagePlaceholder
-      title="Network"
-      description="Cross-functional visibility into peer commitments that impact your work."
-    />
-  );
+  return <TeamOverview mode="network" />;
 }
