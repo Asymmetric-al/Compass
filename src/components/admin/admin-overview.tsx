@@ -1,7 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -47,34 +49,66 @@ export function AdminOverview() {
     cyclesQuery.data?.filter((cycle) => cycle.is_active).length ?? 0;
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Departments</CardTitle>
+            <CardDescription>
+              Configured operational departments
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{departmentCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Regions</CardTitle>
+            <CardDescription>Regional compartments in use</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{regionCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Active Cycles</CardTitle>
+            <CardDescription>
+              Current annual and quarterly focus windows
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{activeCycleCount}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Departments</CardTitle>
-          <CardDescription>Configured operational departments</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-semibold">{departmentCount}</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Regions</CardTitle>
-          <CardDescription>Regional compartments in use</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-semibold">{regionCount}</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Active Cycles</CardTitle>
+          <CardTitle className="text-base">
+            Administration quick links
+          </CardTitle>
           <CardDescription>
-            Current annual and quarterly focus windows
+            Manage structure, permissions, cadence, and security.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-semibold">{activeCycleCount}</p>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/teams">Teams</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/roles">Roles</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/cycles">Cycles</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/reporting-lines">Reporting Lines</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/security">Security</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

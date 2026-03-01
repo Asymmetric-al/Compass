@@ -23,6 +23,21 @@ export const createReportingLineSchema = z.object({
   reportUserId: uuidSchema,
 });
 
+export const createRoleAssignmentSchema = z.object({
+  userId: uuidSchema,
+  role: z.enum([
+    "co_ed",
+    "admin",
+    "staff",
+    "department_director",
+    "department_staff",
+    "regional_director",
+    "regional_staff",
+    "read_only",
+  ]),
+  teamId: uuidSchema.nullable().optional(),
+});
+
 export const createCycleSchema = z.object({
   type: z.enum(["annual", "quarterly"]),
   name: z.string().min(2).max(80),

@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { SecurityAdmin } from "@/components/admin/security-admin";
 
 export default function AdminSecurityPage() {
-  return (
-    <PagePlaceholder
-      title="Security"
-      description="Review access controls, data classification, and restricted-content governance."
-    />
-  );
+  return <SecurityAdmin />;
 }
