@@ -16,6 +16,7 @@ export async function GET(request: Request) {
   const teamId = url.searchParams.get("teamId");
   const statusKey = url.searchParams.get("statusKey");
   const boardId = url.searchParams.get("boardId");
+  const goalId = url.searchParams.get("goalId");
   const includeDone = url.searchParams.get("includeDone") === "true";
   const q = url.searchParams.get("q");
 
@@ -55,6 +56,31 @@ export async function GET(request: Request) {
   }
 
   let filtered = data ?? [];
+  if (goalId && filtered.length > 0) {
+    const { data: goalLinks, error: goalLinksError } = await context.supabase
+      .from("work_item_goal_links")
+      .select("work_item_id")
+      .eq("org_id", context.orgId)
+      .eq("goal_id", goalId)
+      .in(
+        "work_item_id",
+        filtered.map((item) => item.id)
+      );
+
+    if (goalLinksError) {
+      return apiError(
+        { code: API_ERROR.INTERNAL_ERROR, message: goalLinksError.message },
+        requestId,
+        500
+      );
+    }
+
+    const linkedIds = new Set(
+      (goalLinks ?? []).map((link) => link.work_item_id)
+    );
+    filtered = filtered.filter((item) => linkedIds.has(item.id));
+  }
+
   if (boardId && filtered.length > 0) {
     const { data: boardStateRows, error: boardStateError } =
       await context.supabase
