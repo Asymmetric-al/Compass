@@ -1,24 +1,31 @@
-import { describe, expect, test } from "vitest";
 import { render, screen } from "@testing-library/react";
-import Home from "../app/page";
+import { describe, expect, test } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-describe("Home page", () => {
-  test("renders the heading", () => {
-    render(<Home />);
-    const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading).toHaveTextContent("Compass");
+import TodayPage from "@/app/(app)/today/page";
+
+describe("Today page", () => {
+  function renderWithProviders() {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TodayPage />
+      </QueryClientProvider>
+    );
+  }
+
+  test("renders stewardship-focused title", () => {
+    renderWithProviders();
+    expect(screen.getByText("Today")).toBeInTheDocument();
   });
 
-  test("renders the subtitle", () => {
-    render(<Home />);
+  test("renders ministry-first description", () => {
+    renderWithProviders();
     expect(
-      screen.getByText("Built with Next.js 16 and Turbopack")
+      screen.getByText("Your personal execution lane powered by the Workboard.")
     ).toBeInTheDocument();
-  });
-
-  test("renders the Get Started link", () => {
-    render(<Home />);
-    const link = screen.getByText("Get Started");
-    expect(link).toHaveAttribute("href", "https://nextjs.org/docs");
   });
 });
