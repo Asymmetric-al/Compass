@@ -17,7 +17,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:bootstrap": "bun scripts/bootstrap-compass-db.ts",
+    "db:migrate:v2": "bun scripts/bootstrap-compass-db.ts && bun scripts/migrate-aims-to-goals.ts && bun scripts/migrate-commitments-to-work-items.ts && bun scripts/bootstrap-workboards.ts && bun scripts/backfill-board-state.ts",
+    "db:backfill:v2": "bun scripts/bootstrap-workboards.ts && bun scripts/backfill-board-state.ts",
     "db:seed:mock": "bun scripts/seed-compass-mock-data.ts",
+    "db:seed:v2": "bun scripts/seed-workboard-mock-data.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
