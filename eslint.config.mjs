@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent skills contain third-party code that should not be linted
+    ".agents/**",
+    ".claude/**",
+    ".cursor/**",
   ]),
 ]);
 
