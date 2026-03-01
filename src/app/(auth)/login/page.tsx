@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import {
@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 
 const initialState = { error: undefined };
 
-export default function LoginPage() {
+function LoginFormContent() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? "/today";
   const authError = searchParams.get("error");
@@ -40,6 +40,50 @@ export default function LoginPage() {
     initialState
   );
 
+  return (
+    <LoginCard
+      authError={authError}
+      redirectTo={redirectTo}
+      loginState={loginState}
+      loginFormAction={loginFormAction}
+      loginPending={loginPending}
+      signupState={signupState}
+      signupFormAction={signupFormAction}
+      signupPending={signupPending}
+      googleState={googleState}
+      googleFormAction={googleFormAction}
+      googlePending={googlePending}
+    />
+  );
+}
+
+type LoginCardProps = {
+  authError: string | null;
+  redirectTo: string;
+  loginState: { error?: string };
+  loginFormAction: (formData: FormData) => void;
+  loginPending: boolean;
+  signupState: { error?: string };
+  signupFormAction: (formData: FormData) => void;
+  signupPending: boolean;
+  googleState: { error?: string };
+  googleFormAction: (formData: FormData) => void;
+  googlePending: boolean;
+};
+
+function LoginCard({
+  authError,
+  redirectTo,
+  loginState,
+  loginFormAction,
+  loginPending,
+  signupState,
+  signupFormAction,
+  signupPending,
+  googleState,
+  googleFormAction,
+  googlePending,
+}: LoginCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -145,5 +189,27 @@ export default function LoginPage() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+function LoginCardFallback() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Welcome to Compass</CardTitle>
+        <CardDescription>Loading sign-in form…</CardDescription>
+      </CardHeader>
+      <CardContent className="text-muted-foreground text-sm">
+        Preparing authentication options.
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginCardFallback />}>
+      <LoginFormContent />
+    </Suspense>
   );
 }
