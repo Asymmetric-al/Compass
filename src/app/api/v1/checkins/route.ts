@@ -59,17 +59,20 @@ export async function POST(request: Request) {
   const payload = parseResult.data;
   const { data, error } = await context.supabase
     .from("checkins")
-    .upsert({
-      org_id: context.orgId,
-      user_id: context.user.id,
-      week_start: payload.weekStart,
-      highlights_json: payload.highlightsJson ?? {},
-      progress_json: payload.progressJson ?? {},
-      blockers_json: payload.blockersJson ?? {},
-      asks_json: payload.asksJson ?? {},
-      prayer_json: payload.prayerJson ?? {},
-      next_week_json: payload.nextWeekJson ?? {},
-    })
+    .upsert(
+      {
+        org_id: context.orgId,
+        user_id: context.user.id,
+        week_start: payload.weekStart,
+        highlights_json: payload.highlightsJson ?? {},
+        progress_json: payload.progressJson ?? {},
+        blockers_json: payload.blockersJson ?? {},
+        asks_json: payload.asksJson ?? {},
+        prayer_json: payload.prayerJson ?? {},
+        next_week_json: payload.nextWeekJson ?? {},
+      },
+      { onConflict: "user_id,week_start" }
+    )
     .select(
       "id, user_id, week_start, highlights_json, progress_json, blockers_json, asks_json, prayer_json, next_week_json, updated_at"
     )

@@ -222,6 +222,7 @@ as $$
 declare
   v_org_id uuid;
   v_name text;
+  v_has_legacy_profile_id boolean;
 begin
   select primary_org_id into v_org_id
   from public.app_config
@@ -237,13 +238,35 @@ begin
     split_part(new.email, '@', 1)
   );
 
-  insert into public.profiles (user_id, org_id, email, full_name)
-  values (new.id, v_org_id, new.email, v_name)
-  on conflict (user_id) do update
-  set
-    email = excluded.email,
-    full_name = excluded.full_name,
-    updated_at = now();
+  select exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'profiles'
+      and column_name = 'id'
+  ) into v_has_legacy_profile_id;
+
+  if v_has_legacy_profile_id then
+    insert into public.profiles (id, user_id, org_id, email, full_name, timezone, is_active)
+    values (new.id, new.id, v_org_id, new.email, v_name, 'UTC', true)
+    on conflict (user_id) do update
+    set
+      id = excluded.id,
+      org_id = excluded.org_id,
+      email = excluded.email,
+      full_name = excluded.full_name,
+      timezone = coalesce(public.profiles.timezone, excluded.timezone),
+      is_active = coalesce(public.profiles.is_active, true),
+      updated_at = now();
+  else
+    insert into public.profiles (user_id, org_id, email, full_name)
+    values (new.id, v_org_id, new.email, v_name)
+    on conflict (user_id) do update
+    set
+      email = excluded.email,
+      full_name = excluded.full_name,
+      updated_at = now();
+  end if;
 
   return new;
 end;

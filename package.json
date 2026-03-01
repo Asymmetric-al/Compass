@@ -16,6 +16,8 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "db:bootstrap": "bun scripts/bootstrap-compass-db.ts",
+    "db:seed:mock": "bun scripts/seed-compass-mock-data.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
