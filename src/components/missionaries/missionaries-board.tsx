@@ -121,6 +121,18 @@ export function MissionariesBoard() {
           </div>
         ) : null}
 
+        {missionariesQuery.isError ? (
+          <p className="text-destructive text-sm">
+            {(missionariesQuery.error as Error).message}
+          </p>
+        ) : null}
+
+        {createMissionary.isError ? (
+          <p className="text-destructive text-sm">
+            {(createMissionary.error as Error).message}
+          </p>
+        ) : null}
+
         <div className="space-y-2">
           {missionariesQuery.data?.map((item) => (
             <div key={item.id} className="rounded-md border p-3">

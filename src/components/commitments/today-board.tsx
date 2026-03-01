@@ -111,6 +111,18 @@ export function TodayBoard() {
             </div>
           </form>
 
+          {createCommitment.isError ? (
+            <p className="text-destructive text-sm">
+              {(createCommitment.error as Error).message}
+            </p>
+          ) : null}
+
+          {updateCommitment.isError ? (
+            <p className="text-destructive text-sm">
+              {(updateCommitment.error as Error).message}
+            </p>
+          ) : null}
+
           {commitmentsQuery.isLoading ? (
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Loader2 className="size-4 animate-spin" />

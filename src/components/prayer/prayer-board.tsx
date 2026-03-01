@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +75,25 @@ export function PrayerBoard() {
             {createPrayerItem.isPending ? "Saving..." : "Add prayer"}
           </Button>
         </form>
+
+        {createPrayerItem.isError ? (
+          <p className="text-destructive text-sm">
+            {(createPrayerItem.error as Error).message}
+          </p>
+        ) : null}
+
+        {itemsQuery.isLoading ? (
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Loader2 className="size-4 animate-spin" />
+            Loading prayer items...
+          </div>
+        ) : null}
+
+        {itemsQuery.isError ? (
+          <p className="text-destructive text-sm">
+            {(itemsQuery.error as Error).message}
+          </p>
+        ) : null}
 
         <div className="space-y-2">
           {itemsQuery.data?.map((item) => (

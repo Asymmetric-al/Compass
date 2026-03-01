@@ -27,7 +27,7 @@ import type { DbAim } from "@/types/db";
 
 export function AimsDashboard() {
   const [title, setTitle] = useState("");
-  const [scope, setScope] = useState<"org" | "team" | "user">("org");
+  const [scope, setScope] = useState<"org" | "team" | "user">("user");
   const queryClient = useQueryClient();
 
   const aimsQuery = useQuery({
@@ -110,6 +110,12 @@ export function AimsDashboard() {
               </Button>
             </div>
           </form>
+
+          {createAim.isError ? (
+            <p className="text-destructive text-sm">
+              {(createAim.error as Error).message}
+            </p>
+          ) : null}
 
           {aimsQuery.isLoading ? (
             <div className="text-muted-foreground flex items-center gap-2 text-sm">

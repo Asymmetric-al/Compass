@@ -102,6 +102,18 @@ export function StoriesBoard() {
           </div>
         ) : null}
 
+        {storiesQuery.isError ? (
+          <p className="text-destructive text-sm">
+            {(storiesQuery.error as Error).message}
+          </p>
+        ) : null}
+
+        {createStory.isError ? (
+          <p className="text-destructive text-sm">
+            {(createStory.error as Error).message}
+          </p>
+        ) : null}
+
         <div className="space-y-2">
           {storiesQuery.data?.map((story) => (
             <div key={story.id} className="rounded-md border p-3">

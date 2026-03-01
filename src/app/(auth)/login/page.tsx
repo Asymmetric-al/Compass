@@ -137,7 +137,7 @@ function LoginCard({
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
           <div className="space-y-1.5">
-            <Label htmlFor="signup-email">Email</Label>
+            <Label htmlFor="signup-email">Sign-up email</Label>
             <Input
               id="signup-email"
               name="email"
@@ -147,7 +147,7 @@ function LoginCard({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="signup-password">Password</Label>
+            <Label htmlFor="signup-password">Sign-up password</Label>
             <Input
               id="signup-password"
               name="password"
