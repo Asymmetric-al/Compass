@@ -12,6 +12,9 @@ const MIGRATION_FILES = [
   "202603010002_functions_triggers.sql",
   "202603010003_rls_policies.sql",
   "202603010004_seed_bootstrap.sql",
+  "202603010005_goals_workboard_core.sql",
+  "202603010006_goals_workboard_rls.sql",
+  "202603010007_goals_workboard_bootstrap.sql",
 ] as const;
 
 function getDatabaseUrl() {
