@@ -1,7 +1,7 @@
 export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-center gap-8 py-32 px-16 bg-white dark:bg-black">
+      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-center gap-8 bg-white px-16 py-32 dark:bg-black">
         <h1 className="text-5xl font-bold tracking-tight text-black dark:text-zinc-50">
           Compass
         </h1>
@@ -10,7 +10,7 @@ export default function Home() {
         </p>
         <div className="flex gap-4">
           <a
-            className="flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+            className="bg-foreground text-background flex h-12 items-center justify-center rounded-full px-6 transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
             href="https://nextjs.org/docs"
             target="_blank"
             rel="noopener noreferrer"

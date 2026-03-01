@@ -11,14 +11,18 @@ Compass is a Next.js 16 application deployed on Vercel. It uses Bun as the packa
 | Layer | Technology | Version |
 |-------|-----------|---------|
 | Framework | Next.js (App Router, Turbopack) | 16.1.6 |
-| Runtime | Bun | 1.3.x |
+| Runtime | Bun | 1.3.10 |
 | Language | TypeScript (strict) | 5.9.x |
 | Styling | Tailwind CSS 4 + shadcn/ui | 4.2.x |
 | Database | Supabase (Postgres) | -- |
 | Auth | Supabase Auth | -- |
 | Email | Resend | -- |
 | Deployment | Vercel | -- |
-| Testing | Bun test + @testing-library/react | -- |
+| Unit Testing | Vitest + @testing-library/react | 4.x |
+| E2E Testing | Playwright (Chromium) | 1.58.x |
+| Linting | ESLint (flat config) + Prettier | 9.x / 3.8.x |
+| Task Runner | Turborepo | 2.8.x |
+| Git Hooks | Husky + lint-staged | 9.x / 16.x |
 
 ## Commands
 
@@ -29,27 +33,42 @@ Compass is a Next.js 16 application deployed on Vercel. It uses Bun as the packa
 | Build | `bun run build` |
 | Start | `bun run start` |
 | Lint | `bun run lint` |
-| Test | `bun test` |
+| Lint (auto-fix) | `bun run lint:fix` |
+| Type check | `bun run type-check` |
+| Unit tests | `bun run test` |
+| Unit tests (watch) | `bun run test:watch` |
+| Unit tests (coverage) | `bun run test:coverage` |
+| E2E tests | `bun run test:e2e` |
+| Format | `bun run format` |
+| Format check | `bun run format:check` |
+| Turbo (all checks) | `bunx turbo lint test type-check format:check` |
 
 ## Project Structure
 
 ```
 compass/
 ├── src/
-│   ├── app/              # Next.js App Router pages and layouts
-│   │   ├── layout.tsx     # Root layout
-│   │   ├── page.tsx       # Home page
-│   │   └── globals.css    # Global styles (Tailwind)
-│   └── __tests__/         # Bun test files
-├── public/                # Static assets
-├── .agents/skills/        # Agent skills (symlinked, agent-agnostic)
-├── test/setup.ts          # Bun test preload (happy-dom)
-├── bunfig.toml            # Bun config (test preload)
-├── next.config.ts         # Next.js config
-├── eslint.config.mjs      # ESLint flat config
-├── postcss.config.mjs     # PostCSS (Tailwind)
-├── tsconfig.json          # TypeScript config
-└── package.json           # Dependencies and scripts
+│   ├── app/              # Next.js App Router (pages, layouts, routes)
+│   ├── components/       # Shared React components
+│   ├── lib/              # Utility functions, Supabase client, etc.
+│   ├── types/            # TypeScript type definitions
+│   └── __tests__/        # Unit tests (Vitest)
+├── e2e/                  # E2E tests (Playwright)
+├── public/               # Static assets
+├── test/                 # Test setup files
+├── .agents/skills/       # AI agent skills (1,300+)
+├── .husky/               # Git hooks (pre-commit: lint-staged)
+├── turbo.json            # Turborepo task config
+├── vitest.config.ts      # Vitest config
+├── playwright.config.ts  # Playwright config
+├── next.config.ts        # Next.js config
+├── eslint.config.mjs     # ESLint flat config
+├── .prettierrc           # Prettier config
+├── postcss.config.mjs    # PostCSS (Tailwind)
+├── bunfig.toml           # Bun config
+├── tsconfig.json         # TypeScript config
+├── .env.example          # Environment variables template
+└── package.json          # Dependencies and scripts
 ```
 
 ## Architecture Decisions
@@ -74,11 +93,26 @@ compass/
 
 ## Testing
 
-- **Runner:** Bun's built-in test runner (`bun test`).
-- **DOM:** `@happy-dom/global-registrator` preloaded via `bunfig.toml`.
-- **Assertions:** Use `expect` from `bun:test`.
-- **React rendering:** Use `@testing-library/react` for component tests.
-- Tests live in `src/__tests__/` and follow `*.test.tsx` naming.
+### Unit Tests (Vitest)
+
+- **Runner:** Vitest (`bun run test`).
+- **DOM:** jsdom via `vitest.config.ts`.
+- **Setup:** `test/setup.vitest.ts` loads `@testing-library/jest-dom/vitest` matchers.
+- **React rendering:** `@testing-library/react` for component tests.
+- Tests live in `src/__tests__/` and follow `*.test.tsx` or `*.spec.tsx` naming.
+- Path alias `@/` resolves to `src/` in tests.
+
+### E2E Tests (Playwright)
+
+- **Runner:** Playwright (`bun run test:e2e`).
+- **Browser:** Chromium only (add Firefox/WebKit in `playwright.config.ts` if needed).
+- **Base URL:** `http://localhost:3000` (dev server auto-started by Playwright).
+- Tests live in `e2e/` and follow `*.spec.ts` naming.
+
+### Test Coverage
+
+- Run `bun run test:coverage` for V8-based coverage reports.
+- Coverage output goes to `coverage/` (gitignored).
 
 ## Deployment
 
@@ -218,10 +252,14 @@ Over 1,300 skills are installed covering Next.js, React, Supabase, Tailwind, Typ
 ## Cursor Cloud specific instructions
 
 - **Bun is the package manager.** The lockfile is `bun.lock`. Do not use npm/pnpm/yarn.
-- After first `bun install`, run `bun pm trust unrs-resolver` to allow its postinstall script.
-- **Turbopack is the default bundler** for `next dev` and `next build`. No flags needed.
-- **Bun test runner** is used (`bun test`). DOM environment via `@happy-dom/global-registrator` preloaded in `bunfig.toml`.
+- After `bun install`, run `bun pm trust --all` if postinstall scripts are blocked (sharp, esbuild, unrs-resolver).
+- **Turbopack is the default bundler** for `next dev` and `next build`. The `dev` script includes `--turbopack` explicitly.
+- **Vitest** is the unit test runner (`bun run test`). Do not use `bun test` (the old Bun runner setup is still in `bunfig.toml` but Vitest is the standard).
+- **Playwright** is the E2E test runner (`bun run test:e2e`). Only Chromium is installed; run `bunx playwright install` to add more browsers.
+- **Turborepo** (`turbo.json`) caches lint/test/type-check/format tasks. Use `bunx turbo <task>` for cached runs.
+- **Husky + lint-staged** run on pre-commit: ESLint fix + Prettier on staged `.ts/.tsx` files.
 - ESLint uses flat config (`eslint.config.mjs`), not `.eslintrc`.
-- Tailwind CSS 4 uses `@tailwindcss/postcss` (no `tailwind.config.js`; config via CSS).
-- `@types/bun` is installed for Bun API type support.
-- No test framework migration needed; Bun's built-in runner is the standard.
+- Prettier config is in `.prettierrc` with the `prettier-plugin-tailwindcss` plugin for class sorting.
+- Tailwind CSS 4 uses `@tailwindcss/postcss` (no `tailwind.config.js`; configure via CSS).
+- Environment variables template is in `.env.example`. Copy to `.env.local` before running.
+- Directories `src/components/`, `src/lib/`, `src/types/` are scaffolded and ready for use.

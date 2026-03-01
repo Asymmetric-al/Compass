@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files
+.env
+.env.local
+.env.*.local
 
 # vercel
 .vercel
@@ -39,6 +41,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# turbo
+.turbo
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+
+# vitest
+/coverage/
 
 # agent skills - symlinked agent directories (canonical copy is .agents/skills/)
 /.adal/

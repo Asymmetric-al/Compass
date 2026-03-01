@@ -7,15 +7,18 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Agent skills contain third-party code that should not be linted
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    ".turbo/**",
     ".agents/**",
     ".claude/**",
     ".cursor/**",
+    "skills/**",
   ]),
 ]);
 
