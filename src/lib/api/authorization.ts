@@ -39,3 +39,69 @@ export async function isTeamDirector(
 
   return { authorized: Boolean(data && data.length > 0), error };
 }
+
+export async function canViewBoard(
+  supabase: SupabaseClient,
+  boardId: string
+): Promise<AuthorizationResult> {
+  const { data, error } = await supabase.rpc("can_view_board", {
+    p_board_id: boardId,
+  });
+
+  return { authorized: Boolean(data), error };
+}
+
+export async function canEditBoard(
+  supabase: SupabaseClient,
+  boardId: string
+): Promise<AuthorizationResult> {
+  const { data, error } = await supabase.rpc("can_edit_board", {
+    p_board_id: boardId,
+  });
+
+  return { authorized: Boolean(data), error };
+}
+
+export async function canViewGoal(
+  supabase: SupabaseClient,
+  goalId: string
+): Promise<AuthorizationResult> {
+  const { data, error } = await supabase.rpc("can_view_goal", {
+    p_goal_id: goalId,
+  });
+
+  return { authorized: Boolean(data), error };
+}
+
+export async function canEditGoal(
+  supabase: SupabaseClient,
+  goalId: string
+): Promise<AuthorizationResult> {
+  const { data, error } = await supabase.rpc("can_edit_goal", {
+    p_goal_id: goalId,
+  });
+
+  return { authorized: Boolean(data), error };
+}
+
+export async function canViewWorkItem(
+  supabase: SupabaseClient,
+  workItemId: string
+): Promise<AuthorizationResult> {
+  const { data, error } = await supabase.rpc("can_view_work_item", {
+    p_work_item_id: workItemId,
+  });
+
+  return { authorized: Boolean(data), error };
+}
+
+export async function canEditWorkItem(
+  supabase: SupabaseClient,
+  workItemId: string
+): Promise<AuthorizationResult> {
+  const { data, error } = await supabase.rpc("can_edit_work_item", {
+    p_work_item_id: workItemId,
+  });
+
+  return { authorized: Boolean(data), error };
+}
