@@ -1,6 +1,16 @@
 # Compass
 
-A Next.js 16 application built with Turbopack, TypeScript, Tailwind CSS 4, and Bun. Deployed on Vercel with Supabase as the backend.
+A ministry-first goals platform built for mission organizations.
+
+Compass helps teams:
+
+- Set organization, department, region, and personal **Aims**
+- Track **Lead** and **Lag** measures with clear definitions
+- Run a daily **Today commitments** workflow with priority + weight
+- Submit weekly **Check-ins** with blockers, asks, and prayer
+- Capture **Stories** and **Prayer items**
+- Manage staff-only **Missionary records** and monthly updates
+- Operate with role-aware access controls and Supabase RLS policies
 
 ## Quick Start
 
@@ -16,6 +26,34 @@ bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Environment Variables
+
+At minimum, set:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+# optional fallback
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+## Supabase Schema + RLS
+
+SQL migrations live in:
+
+```bash
+supabase/migrations/
+```
+
+They include:
+
+- Core domain schema (aims, measures, commitments, check-ins, stories, prayer, missionaries)
+- Trigger and helper functions
+- Row-level security policies
+- Bootstrap seed for default org + teams
 
 ## Commands
 
@@ -52,28 +90,35 @@ Use `bunx turbo <task>` to run tasks with Turborepo caching.
 - **Task Runner:** Turborepo
 - **Git Hooks:** Husky + lint-staged
 
+## Application Sections
+
+- `/today` — daily prioritized commitments
+- `/my-work` — personal execution list
+- `/my-team` — team pulse and check-in visibility
+- `/network` — cross-team view
+- `/aims` — aim definition and tracking
+- `/map` — goal connections map
+- `/check-ins` — weekly check-in submission
+- `/stories` — quick and MSC-style stories
+- `/prayer` — prayer request tracking
+- `/missionaries` — missionary records and updates
+- `/admin` — organizational setup and governance overview
+
 ## Project Structure
 
 ```
 compass/
 ├── src/
-│   ├── app/              # Next.js App Router (pages, layouts, routes)
-│   ├── components/       # Shared React components
-│   ├── lib/              # Utility functions, Supabase client, etc.
-│   ├── types/            # TypeScript type definitions
-│   └── __tests__/        # Unit tests (Vitest)
-├── e2e/                  # E2E tests (Playwright)
-├── public/               # Static assets
-├── test/                 # Test setup files
-├── .agents/skills/       # AI agent skills (1,300+)
-├── .husky/               # Git hooks
-├── turbo.json            # Turborepo config
-├── vitest.config.ts      # Vitest config
-├── playwright.config.ts  # Playwright config
-├── next.config.ts        # Next.js config
-├── eslint.config.mjs     # ESLint flat config
-├── .prettierrc           # Prettier config
-├── bunfig.toml           # Bun config
-├── tsconfig.json         # TypeScript config
-└── .env.example          # Environment variables template
+│   ├── app/                    # App Router pages + API routes
+│   ├── components/             # UI + domain components
+│   ├── lib/                    # Auth, API helpers, Supabase clients, validation
+│   ├── types/                  # Shared domain and DB types
+│   └── __tests__/              # Unit tests
+├── supabase/
+│   ├── config.toml
+│   └── migrations/             # Schema + RLS migrations
+├── e2e/                        # Playwright tests
+├── test/                       # Test setup files
+├── proxy.ts                    # Next.js 16 auth/session proxy
+└── .env.example                # Environment template
 ```
