@@ -1,0 +1,16 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "at-rule-no-unknown": null
+  },
+  "ignoreFiles": [
+    ".next/**",
+    "out/**",
+    "build/**",
+    "coverage/**",
+    "node_modules/**",
+    ".agents/**",
+    ".claude/**",
+    ".cursor/**"
+  ]
+}
